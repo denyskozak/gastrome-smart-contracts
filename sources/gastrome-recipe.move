@@ -9,6 +9,7 @@ module gastrome::recipe {
     public struct Step has store {
         description: String,
         ingredients_ids: vector<u64>,
+        video_url: String,
         duration: u64,
     }
 
@@ -32,11 +33,6 @@ module gastrome::recipe {
         ingredients: vector<Ingredient>,
     }
 
-    public struct ViewsCounter has store {
-        id: UID,
-        recipe_id: address,
-        views: u64,
-    }
 
     // Events
     public struct RecipeMinted {
