@@ -2,6 +2,7 @@
 module gastrome::recipe {
     use std::string::{String};
     use sui::event;
+    use sui::object::delete;
 
     public struct Step has store {
         description: String,
