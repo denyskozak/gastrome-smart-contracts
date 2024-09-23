@@ -5,7 +5,14 @@ module gastrome::coin {
     public struct COIN has drop {}
 
     fun init(witness: COIN, ctx: &mut TxContext) {
-        let (treasury, metadata) = coin::create_currency(witness, 6, b"GASTRO", b"GastroMe", b"Blood of Gastro & Me cooking platform", option::none(), ctx);
+        let (treasury, metadata) = coin::create_currency(
+            witness,
+            6,
+            b"GASTRO",
+            b"GastroMe",
+            b"Blood of Gastro & Me cooking platform",
+            option::none(),
+            ctx);
         transfer::public_freeze_object(metadata);
         transfer::public_transfer(treasury, ctx.sender())
     }
