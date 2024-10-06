@@ -1,43 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect,useCallback } from 'react';
 import {
     Button, TextField, Grid, Typography, Container, Paper, Box,
 } from '@mui/material';
 import { Transaction } from '@mysten/sui/transactions';
-import {Connect} from "./Connect";
-import {useCurrentAccount, useSignTransaction, useSuiClient} from "@mysten/dapp-kit";
+import {useCurrentAccount, useSuiClient} from "@mysten/dapp-kit";
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 
-import { be } from '@mysten/sui/cryptography'
 import {decodeSuiPrivateKey} from "@mysten/sui/cryptography";
+import {GastroSuiAddresses} from "../const";
+import {getContractMethod, getTotalBalance, MIST_PER_GASTROME_COIN} from "../utilities";
 
 export const Coin = () => {
-    const { mutateAsync: signTransaction } = useSignTransaction();
     const client = useSuiClient();
+    const account = useCurrentAccount();
+    const [balance, setBalance] = useState(0);
+
+    const updateBalance = useCallback(() => {
+        if (account) {
+            client.getBalance({
+                owner: account.address,
+                coinType: getContractMethod(GastroSuiAddresses.package, 'coin', 'COIN')
+            })
+                .then(balance => {
+                        console.log(1, balance);
+                    setBalance(getTotalBalance(balance))
+                });
+        }
+    }, [client, setBalance, account]);
+
+    useEffect(() => {
+        updateBalance();
+    }, [updateBalance]);
 
     // State to hold form inputs
     const [amount, setAmount] = useState('');
     const [recipient, setRecipient] = useState('');
 
     // Function to handle form submission
-    const mint = async (e) => {
-        e.preventDefault();
+    const mint = async (event: any) => {
+        event.preventDefault();
+
         try {
             const tx = new Transaction();
-            const keypair = Ed25519Keypair.fromSecretKey(decodeSuiPrivateKey(process.env.REACT_APP_PRIVATE_KEY).secretKey);
+            const keypair = Ed25519Keypair.fromSecretKey(decodeSuiPrivateKey(String(process.env.REACT_APP_PRIVATE_KEY)).secretKey);
 
             tx.moveCall({
-                target: '0x1710a9b077a433087d0b4f73603ca2ffcfd83a25780b46ccc3d153894786d822::coin::mint', // Your Move module call
+                target: getContractMethod(GastroSuiAddresses.package, 'coin', 'mint'),
                 arguments: [
-                    tx.object('0x6e1a3309393661df220c5c5741edd88e5c4702d41d77489e06f3fd4287efc5d0'),  // Replace with actual TreasuryCap object ID
-                    tx.pure.u64(Number(amount)),  // The amount to mint
-                    tx.pure.address(recipient),  // The recipient address
+                    tx.object(GastroSuiAddresses.treasuryCap),
+                    tx.pure.u64(Number(amount) * Math.pow(10, MIST_PER_GASTROME_COIN)),
+                    tx.pure.address(recipient),
                 ],
             });
 
-            const executeResult = client.signAndExecuteTransaction({ signer: keypair, transaction: tx });
-
-
+            const executeResult = await client.signAndExecuteTransaction({ signer: keypair, transaction: tx });
+            await client.waitForTransaction({ timeout: 10000, digest: executeResult.digest });
             console.log('Transaction Result:', executeResult);
+            updateBalance();
         } catch (error) {
             console.error('Error submitting recipe:', error);
         }
@@ -49,6 +68,9 @@ export const Coin = () => {
                 <Box p={4}>
                     <Typography variant="h4" gutterBottom>
                         Mint Gastro Tokens
+                    </Typography>
+                    <Typography gutterBottom>
+                        Your $GASTRO coins: {balance}
                     </Typography>
                     <form onSubmit={mint}>
                         <Grid container spacing={2}>
