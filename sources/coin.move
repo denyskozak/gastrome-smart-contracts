@@ -1,4 +1,3 @@
-/// Module: gastrome
 module gastrome::coin {
     use sui::coin::{Self, TreasuryCap};
 

@@ -1,8 +1,6 @@
-/// Module: recipe
 module gastrome::recipe {
     use std::string::{String};
     use sui::event;
-    use sui::object::delete;
 
     public struct Step has store {
         description: String,
@@ -32,14 +30,12 @@ module gastrome::recipe {
         url: String,
     }
 
-    // Events
     public struct RecipeMinted has copy, drop {
         object_id: ID,
         creator: address,
         title: String,
     }
 
-    // Functions
     public fun mint_to_sender(
         title: String,
         description: String,

@@ -1,4 +1,3 @@
-/// Module: users
 module gastrome::user {
     use std::string::{String};
     use sui::object;
@@ -11,14 +10,12 @@ module gastrome::user {
         views: u64,
     }
 
-    // Events
     public struct MintUserEvent has copy, drop {
         object_id: ID,
         creator: address,
         name: String,
     }
 
-    // Functions
     public fun mint_to_sender(
         name: String,
         instagram: String,
